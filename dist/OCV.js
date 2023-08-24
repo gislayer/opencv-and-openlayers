@@ -14,7 +14,7 @@ class OCV {
     this.processSort=[];
     this.process={
       colorspaces:{status:false,settings:{low:{red:0,green:0,blue:0},high:{red:150,green:150,blue:150}}},
-      tresholding:{status:false,settings:{}},
+      thresholding:{status:false,settings:{}},
     };
     this.postrenderEvent = map.on('postrender', (e)=>{
       this.sizeChanged(e);
@@ -39,8 +39,8 @@ class OCV {
               this.runColorSpace(settings);
               break;
             }
-            case 'tresholding':{
-              this.runTresholding(settings);
+            case 'thresholding':{
+              this.runThresholding(settings);
               break;
             }
           }
@@ -52,8 +52,8 @@ class OCV {
     
   }
 
-  runTresholding(s){
-    if(this.process.tresholding.settings.type=='simple'){
+  runThresholding(){
+    if(this.process.thresholding.settings.type=='simple'){
       let src = cv.matFromImageData(this.imageData);
       let dst = new cv.Mat();
       var simpletypes = {
@@ -62,12 +62,12 @@ class OCV {
         'THRESH_TRUNC':cv.THRESH_TRUNC,
         'THRESH_TOZERO':cv.THRESH_TOZERO
       };
-      cv.threshold(src, dst, this.process.tresholding.settings.simple.min, this.process.tresholding.settings.simple.max, simpletypes[this.process.tresholding.settings.simple.type]);
+      cv.threshold(src, dst, this.process.thresholding.settings.simple.min, this.process.thresholding.settings.simple.max, simpletypes[this.process.thresholding.settings.simple.type]);
       cv.imshow(this.id, dst);
       src.delete();
       dst.delete();
     }
-    if(this.process.tresholding.settings.type=='adaptive'){
+    if(this.process.thresholding.settings.type=='adaptive'){
       var adaptiveMethods = {
         'ADAPTIVE_THRESH_MEAN_C':cv.ADAPTIVE_THRESH_MEAN_C,
         'ADAPTIVE_THRESH_GAUSSIAN_C':cv.ADAPTIVE_THRESH_GAUSSIAN_C
@@ -79,22 +79,21 @@ class OCV {
       let src = cv.matFromImageData(this.imageData);
       let dst = new cv.Mat();
       cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
-      // You can try more different parameters
-      cv.adaptiveThreshold(src, dst, this.process.tresholding.settings.adaptive.max, adaptiveMethods[this.process.tresholding.settings.adaptive.method], simpletypes[this.process.tresholding.settings.adaptive.type], 3, 2);
+      cv.adaptiveThreshold(src, dst, this.process.thresholding.settings.adaptive.max, adaptiveMethods[this.process.thresholding.settings.adaptive.method], simpletypes[this.process.thresholding.settings.adaptive.type], 3, 2);
       cv.imshow(this.id, dst);
       src.delete();
       dst.delete();
     }
   }
 
-  setTresholding(status,settings){
-    var id = 'tresholding'; 
+  setThresholding(status,settings){
+    var id = 'thresholding'; 
     if(status){
       if(this.processSort.indexOf(id)==-1){
-        this.process.tresholding.status=true;
+        this.process.thresholding.status=true;
         this.processSort.push(id);
       }
-      this.process.tresholding.settings = {
+      this.process.thresholding.settings = {
         type:settings.type==undefined?'simple':settings.type,
         simple:{
           min:settings.simple==undefined?177:settings.simple.min==undefined?177:Number(settings.simple.min),
@@ -112,7 +111,7 @@ class OCV {
       if(index!==-1){
         this.processSort.splice(index,1);
       }
-      this.process.tresholding.status=false;
+      this.process.thresholding.status=false;
     }
     this.runProcess();
   }
