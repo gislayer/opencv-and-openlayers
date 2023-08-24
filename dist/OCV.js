@@ -52,8 +52,10 @@ class OCV {
     
   }
 
-  runThresholding(){
-    if(this.process.thresholding.settings.type=='simple'){
+  runTresholding(s){
+    debugger;
+    if(s.type=='simple'){
+      debugger;
       let src = cv.matFromImageData(this.imageData);
       let dst = new cv.Mat();
       var simpletypes = {
@@ -62,12 +64,12 @@ class OCV {
         'THRESH_TRUNC':cv.THRESH_TRUNC,
         'THRESH_TOZERO':cv.THRESH_TOZERO
       };
-      cv.threshold(src, dst, this.process.thresholding.settings.simple.min, this.process.thresholding.settings.simple.max, simpletypes[this.process.thresholding.settings.simple.type]);
+      cv.threshold(src, dst, s.simple.min, s.simple.max, simpletypes[s.simple.type]);
       cv.imshow(this.id, dst);
       src.delete();
       dst.delete();
     }
-    if(this.process.thresholding.settings.type=='adaptive'){
+    if(s.type=='adaptive'){
       var adaptiveMethods = {
         'ADAPTIVE_THRESH_MEAN_C':cv.ADAPTIVE_THRESH_MEAN_C,
         'ADAPTIVE_THRESH_GAUSSIAN_C':cv.ADAPTIVE_THRESH_GAUSSIAN_C
@@ -79,7 +81,8 @@ class OCV {
       let src = cv.matFromImageData(this.imageData);
       let dst = new cv.Mat();
       cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
-      cv.adaptiveThreshold(src, dst, this.process.thresholding.settings.adaptive.max, adaptiveMethods[this.process.thresholding.settings.adaptive.method], simpletypes[this.process.thresholding.settings.adaptive.type], 3, 2);
+      // You can try more different parameters
+      cv.adaptiveThreshold(src, dst, s.adaptive.max, adaptiveMethods[s.adaptive.method], simpletypes[s.adaptive.type], 3, 2);
       cv.imshow(this.id, dst);
       src.delete();
       dst.delete();
