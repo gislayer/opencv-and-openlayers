@@ -4,6 +4,7 @@ class OCV {
     this.divId = divId;
     this.canvas=null;
     this.config={};
+    this.geoms=[];
     this.status={
       canvasCreated:false
     };
@@ -15,6 +16,7 @@ class OCV {
     this.process={
       colorspaces:{status:false,settings:{low:{red:0,green:0,blue:0},high:{red:150,green:150,blue:150}}},
       thresholding:{status:false,settings:{}},
+      contour:{status:false,settings:{min:245,max:255}},
     };
     this.postrenderEvent = map.on('postrender', (e)=>{
       this.sizeChanged(e);
@@ -43,6 +45,10 @@ class OCV {
               this.runThresholding(settings);
               break;
             }
+            case 'contour':{
+              this.runContour(settings);
+              break;
+            }
           }
         }
       });
@@ -52,7 +58,59 @@ class OCV {
     
   }
 
-  runTresholding(s){
+  runContour(s){
+    let src = cv.matFromImageData(this.imageData);
+    let dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
+    cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+    cv.threshold(src, src, s.min, s.max, cv.THRESH_BINARY);
+    let contours = new cv.MatVector();
+    let hierarchy = new cv.Mat();
+    cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+    var geoms = [];
+    for (let i = 0; i < contours.size(); ++i) {
+        var geom = [];
+        var contour = contours.get(i);
+        for (let j = 0; j < contour.data32S.length; j += 2) {
+          const x = contour.data32S[j];
+          const y = contour.data32S[j + 1];
+          geom.push({ x: x, y: y });
+        }
+        geoms.push(geom);
+        let color = new cv.Scalar(Math.round(Math.random() * 255), Math.round(Math.random() * 255),
+                                  Math.round(Math.random() * 255));
+        cv.drawContours(dst, contours, i, color, 1, cv.LINE_8, hierarchy, 0);
+    }
+    this.geoms = geoms;
+    cv.imshow(this.id, dst);
+    src.delete(); dst.delete(); contours.delete(); hierarchy.delete();
+    
+  }
+
+  setContour(status,settings){
+    debugger;
+    var id = 'contour'; 
+    if(status){
+      if(this.processSort.indexOf(id)==-1){
+        debugger;
+        this.process.contour.status=true;
+        this.processSort.push(id);
+      }
+      this.process.contour.settings = {
+        type:settings.type==undefined?'simple':settings.type,
+        min:this.getValue('min', settings, 245,'number'),
+        max:this.getValue('max', settings, 255,'number'),
+      }
+    }else{
+      var index = this.processSort.indexOf(id);
+      if(index!==-1){
+        this.processSort.splice(index,1);
+      }
+      this.process.contour.status=false;
+    }
+    this.runProcess();
+  }
+
+  runThresholding(s){
     debugger;
     if(s.type=='simple'){
       debugger;
@@ -90,9 +148,11 @@ class OCV {
   }
 
   setThresholding(status,settings){
+    debugger;
     var id = 'thresholding'; 
     if(status){
       if(this.processSort.indexOf(id)==-1){
+        debugger;
         this.process.thresholding.status=true;
         this.processSort.push(id);
       }
@@ -120,6 +180,7 @@ class OCV {
   }
 
   runColorSpace(s){
+    debugger;
     let src = cv.matFromImageData(this.imageData);
     let dst = new cv.Mat();
     let low = new cv.Mat(src.rows, src.cols, src.type(), [s.low.red, s.low.green, s.low.blue, 0]);
@@ -138,11 +199,14 @@ class OCV {
       }
     }
   }
+  
 
   setColorSpace(status,settings){
+    debugger;
     var id = 'colorspaces'; 
     if(status){
       if(this.processSort.indexOf(id)==-1){
+        debugger;
         this.process.colorspaces.status=true;
         this.processSort.push(id);
       }
@@ -201,7 +265,7 @@ class OCV {
   createCanvas(){
     if(this.status.canvasCreated==false){
       var w = Math.floor(this.config.firstWidth/2);
-      var h = this.config.firstHeight-0;
+      var h = this.config.firstHeight;
       const canvas = document.createElement('canvas');
       var verticalDiv = document.createElement('div');
       verticalDiv.id='verticalDiv';
